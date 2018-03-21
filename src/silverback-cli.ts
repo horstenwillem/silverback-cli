@@ -3,67 +3,70 @@ import { writeFileSync, existsSync } from 'fs';
 import { upperFirst, kebabCase } from 'lodash';
 import * as pluralize from 'pluralize';
 
-import * as contentController from './filecontent';
+import * as contentController from './templates';
 
 export default class SilverbackCLI {
   async start(options) {
     try {
       const action = options[2];
       const name = options[3];
+      const path = process.cwd();
 
-      if (!action || !name) throw new Error('Incorrect syntax. Correct syntax is as follows: "create "name"');
+      if (!action || !name) throw new Error('Incorrect syntax. Correct syntax is as follows: create "name"');
 
       if (action === 'create') {
-        this.checkFolderExistance();
-        await this.createFiles(name);
+        this.checkFolderExistance(path);
+        this.createFiles(name, path);
+      } else {
+        throw new Error(`Action "${action}" is not supported. Supported actions are: [create]`);
       }
-      throw new Error(`Action "${action}" is not supported. Supported actions are: [create]`);
+      console.log(chalk.green('Done! 🦍'));
     } catch (err) {
       console.log(chalk.red(err));
     }
   }
 
-  async createFiles(name) {
+  createFiles(name, path) {
     try {
       const kebabCased = kebabCase(name);
       const pluralized = pluralize.plural(name);
 
-      writeFileSync(`./source/models/${kebabCased}.model.ts`, this.createModel({ name }));
-      writeFileSync(`./source/controllers/${kebabCased}.controller.ts`, this.createController(name, kebabCased, pluralized));
-      writeFileSync(`./source/services/${kebabCased}.service.ts`, this.createService(name, kebabCased, pluralized));
-      writeFileSync(`./source/repositories/${kebabCased}.repository.ts`, this.createRepository(name, kebabCased, pluralized));
-      writeFileSync(`./source/serializers/${kebabCased}.serializer.ts`, this.createSerializer(name, pluralized));
+      writeFileSync(`${path}/src/models/${kebabCased}.model.ts`, this.createModel({ name }));
+      writeFileSync(`${path}/src/controllers/${kebabCased}.controller.ts`, this.createController(name, kebabCased, pluralized));
+      writeFileSync(`${path}/src/services/${kebabCased}.service.ts`, this.createService(name, kebabCased, pluralized));
+      writeFileSync(`${path}/src/repositories/${kebabCased}.repository.ts`, this.createRepository(name, kebabCased, pluralized));
+      writeFileSync(`${path}/src/serializers/${kebabCased}.serializer.ts`, this.createSerializer(name, pluralized));
     } catch (err) {
       throw err;
     }
   }
 
-  checkFolderExistance() {
-    const controllersExist = existsSync('./source/controllers');
-    const servicesExists = existsSync('./source/services');
-    const modelsExists = existsSync('./source/models');
-    const repositoriesExists = existsSync('./source/repositories');
-    const serializersExists = existsSync('./source/serializers');
+  checkFolderExistance(path) {
+    const controllersExist = existsSync(`${path}/src/controllers`);
+    const servicesExists = existsSync(`${path}/src/services`);
+    const modelsExists = existsSync(`${path}/src/models`);
+    const repositoriesExists = existsSync(`${path}/src/repositories`);
+    const serializersExists = existsSync(`${path}/src/serializers`);
 
     if (!controllersExist || !servicesExists || !modelsExists || !repositoriesExists || !serializersExists) {
       throw new Error('Not all folders exists!');
     }
   }
 
-  createController(name, kebabed, plural) {
-    return contentController.createController(name, kebabed, plural);
+  createController(name, kebabCased, plural) {
+    return contentController.createController(name, kebabCased, plural);
   }
 
   createModel({ name }) {
     return contentController.createModel(upperFirst(name));
   }
 
-  createService(name, kebabed, plural) {
-    return contentController.createService(name, kebabed, plural, upperFirst(name));
+  createService(name, kebabCased, plural) {
+    return contentController.createService(name, kebabCased, plural, upperFirst(name));
   }
 
-  createRepository(name, kebabed, plural) {
-    return contentController.createRepository(kebabed, plural, upperFirst(name));
+  createRepository(name, kebabCased, plural) {
+    return contentController.createRepository(kebabCased, plural, upperFirst(name));
   }
 
   createSerializer(name, plural) {
