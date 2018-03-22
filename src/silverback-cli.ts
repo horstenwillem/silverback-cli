@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { writeFileSync, existsSync } from 'fs';
-import { upperFirst, kebabCase } from 'lodash';
+import { upperFirst, kebabCase, camelCase } from 'lodash';
 import * as pluralize from 'pluralize';
 
 import * as contentController from './templates';
@@ -28,14 +28,16 @@ export default class SilverbackCLI {
 
   createFiles(name, path) {
     try {
+      const pascalCased = upperFirst(camelCase(name));
+      const camelCased = camelCase(name);
       const kebabCased = kebabCase(name);
-      const pluralized = pluralize.plural(name);
+      const pluralized = pluralize.plural(camelCased);
 
-      writeFileSync(`${path}/src/models/${kebabCased}.model.ts`, this.createModel({ name }));
-      writeFileSync(`${path}/src/controllers/${kebabCased}.controller.ts`, this.createController(name, kebabCased, pluralized));
-      writeFileSync(`${path}/src/services/${kebabCased}.service.ts`, this.createService(name, kebabCased, pluralized));
-      writeFileSync(`${path}/src/repositories/${kebabCased}.repository.ts`, this.createRepository(name, kebabCased, pluralized));
-      writeFileSync(`${path}/src/serializers/${kebabCased}.serializer.ts`, this.createSerializer(name, pluralized));
+      writeFileSync(`${path}/src/models/${kebabCased}.model.ts`, this.createModel(pascalCased));
+      writeFileSync(`${path}/src/controllers/${kebabCased}.controller.ts`, this.createController(camelCased, kebabCased, pluralized));
+      writeFileSync(`${path}/src/services/${kebabCased}.service.ts`, this.createService(camelCased, kebabCased, pluralized, pascalCased));
+      writeFileSync(`${path}/src/repositories/${kebabCased}.repository.ts`, this.createRepository(camelCased, kebabCased, pluralized));
+      writeFileSync(`${path}/src/serializers/${kebabCased}.serializer.ts`, this.createSerializer(camelCased, pluralized));
     } catch (err) {
       throw err;
     }
@@ -57,16 +59,16 @@ export default class SilverbackCLI {
     return contentController.createController(name, kebabCased, plural);
   }
 
-  createModel({ name }) {
+  createModel(name) {
     return contentController.createModel(upperFirst(name));
   }
 
-  createService(name, kebabCased, plural) {
-    return contentController.createService(name, kebabCased, plural, upperFirst(name));
+  createService(name, kebabCased, plural, pascalCased) {
+    return contentController.createService(name, kebabCased, plural, pascalCased);
   }
 
   createRepository(name, kebabCased, plural) {
-    return contentController.createRepository(kebabCased, plural, upperFirst(name));
+    return contentController.createRepository(name, kebabCased, plural, upperFirst(name));
   }
 
   createSerializer(name, plural) {

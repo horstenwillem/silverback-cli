@@ -8,7 +8,7 @@ import * as ${name}Repository from '../repositories/${kebabed}.repository';
 /**
  * Return all ${plural}
  */
-export function getAll(filters: Filters): Promise<${uppercase}[]> {
+export function getAll(filters: Filters): Promise<{ data: ${uppercase}[], totalCount: number }> {
   return ${name}Repository.getAll(filters);
 }
 `;
